@@ -37,3 +37,9 @@ function toggleMic() {
     btn.html('Mic: OFF');
   }
 }
+
+function keyPressed() {
+  if (key === 's') {
+    save('myCanvas.png');
+  }
+}
