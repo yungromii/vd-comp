@@ -382,3 +382,25 @@ function drawAllPoints() {
     }
   }
 }
+
+function drawLines() {
+  stroke(0); // black stroke
+  strokeWeight(1);
+  noFill();
+
+  // Filter and sort "집" category points by x (date), then y (time)
+  let housePoints = points
+    .filter(p => p.category === "집")
+    .sort((a, b) => int(a.date) - int(b.date) || a.y - b.y);
+
+  if (housePoints.length > 1) {
+    beginShape();
+    for (let i = 0; i < housePoints.length; i++) {
+      let pt = housePoints[i];
+      let x = offsetX + (int(pt.date) - 1) * spacing;
+      let y = offsetY + pt.y * spacing;
+      vertex(x, y);
+    }
+    endShape();
+  }
+}
