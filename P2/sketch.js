@@ -177,9 +177,10 @@ function setup() {
 function draw() {
   background(0);
   drawGrid();
-  drawLabels();
-  let totalLength = getTotalLineLength();
+  // Always call drawAllPoints, independent of drawLabels
   drawAllPoints();
+  // drawLabels();  <-- removed this line
+  let totalLength = getTotalLineLength();
   drawLinesAnimated();
   drawingProgress += animationSpeed;
   // Stop animation after all lines are drawn
@@ -242,8 +243,10 @@ function drawGrid() {
   }
   pop();
 }
-  //잘라내기한거
-  
+function drawLabels() {
+  // text rendering disabled
+}       
+
 function drawLinesAnimated() {
   let grouped = {};
   for (let p of points) {
