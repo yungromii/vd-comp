@@ -290,7 +290,7 @@ function drawCategoryButtons() {
   let categories = Object.keys(categoryStyles);
 
   // 버튼 크기와 간격
-  let bw = 80;  // 버튼 폭
+  let bw = 40;  // 버튼 폭
   let bh = 22;  // 버튼 높이
   let gap = 8;  // 버튼 사이 간격
 
@@ -336,9 +336,9 @@ function drawUserTabs() {
   let ux = offsetX + gridWidth + 80; // 그리드 오른쪽에서 약간 띄워서
   let uy = offsetY;                  // 상단 정렬
 
-  let bw = 90; // 탭 폭
+  let bw = 40; // 탭 폭
   let bh = 26; // 탭 높이
-  let gap = 6; // 탭 사이 간격
+  let gap = 10; // 탭 사이 간격
 
   textAlign(CENTER, CENTER);
   textSize(10);
@@ -456,7 +456,7 @@ function mousePressed() {
   let categories = Object.keys(categoryStyles);
 
   // 버튼 크기와 간격 (drawCategoryButtons와 동일)
-  let bw = 80;
+  let bw = 40;
   let bh = 22;
   let gap = 8;
 
