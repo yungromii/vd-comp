@@ -388,7 +388,7 @@ function mousePressed() {
     if (categories.length === 0) return;
 
     // 카테고리 선택 프롬프트 (번호로 선택)
-    let message = "카테고리를 선택하세요:\n";
+    let message = "choose a category:\n";
     for (let k = 0; k < categories.length; k++) {
       message += (k + 1) + ": " + categories[k] + "\n";
     }
@@ -397,7 +397,7 @@ function mousePressed() {
 
     let idx = parseInt(input.trim(), 10) - 1;
     if (isNaN(idx) || idx < 0 || idx >= categories.length) {
-      alert("잘못된 번호입니다.");
+      alert("Invalid number.");
       return;
     }
 
@@ -415,7 +415,7 @@ function mousePressed() {
   // 여기까지 왔으면 pendingStart가 이미 있음 → 끝점 선택 단계
   // 같은 날짜(같은 x축) 안에서만 허용
   if (clicked.dateIndex !== pendingStart.dateIndex) {
-    alert("같은 날짜의 그리드만 시작/끝으로 선택할 수 있어요.");
+    alert("You can only choose the start and end on the same day’s grid.");
     return;
   }
 
