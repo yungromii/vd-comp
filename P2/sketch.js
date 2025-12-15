@@ -15,13 +15,13 @@ let animationSpeed = 545; // 한 프레임당 선 그려질 길이 (픽셀)
 let drawingProgress = 0; // 현재 그려지는 선의 진행 정도
 
 let categoryStyles = {
-  "집":    { color: [255, 255, 224, 127],     weight: 70 },
-  "남의집": { color: [255, 255, 204, 180],     weight: 95 },
-  "학교":  { color: [255, 255, 0, 180],   weight: 95 },
-  "꼼방":  { color: [255, 255, 0, 180],   weight: 75 },
-  "식당":  { color: [0, 255, 0, 180],   weight: 70 },
-  "기타":  { color: [255, 204, 255, 180], weight: 80 },
-  "알바":  { color: [0, 255, 255, 180],   weight: 95 }
+  "집":    { color: [255, 255, 224, 127],     weight: 35 },
+  "남의집": { color: [255, 255, 204, 180],     weight: 40 },
+  "학교":  { color: [255, 255, 0, 180],   weight: 45 },
+  "꼼방":  { color: [255, 255, 0, 180],   weight: 40 },
+  "식당":  { color: [0, 255, 0, 180],   weight: 35 },
+  "기타":  { color: [255, 204, 255, 180], weight: 40 },
+  "알바":  { color: [0, 255, 255, 180],   weight: 50 }
 };
 
 let points = [{date: "01", y: 0, category: "집"},
