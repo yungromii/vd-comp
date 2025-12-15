@@ -180,9 +180,8 @@ function setup() {
 function draw() {
   background(0);
   drawGrid();
-  // Always call drawAllPoints, independent of drawLabels
+  drawLabels();        // 날짜/시간 텍스트 다시 표시
   drawAllPoints();
-  // drawLabels();  <-- removed this line
   let totalLength = getTotalLineLength();
   drawLinesAnimated();
   drawingProgress += animationSpeed;
@@ -244,8 +243,37 @@ function drawGrid() {
   pop();
 }
 function drawLabels() {
-  // text rendering disabled
-}       
+  push();
+  textAlign(CENTER, CENTER);
+  textSize(10);           // 글자 크기
+  textFont('Helvetica');  // 폰트 이름 (시스템 폰트 사용)
+  fill(255);              // 흰색 텍스트
+  noStroke();
+
+  // 위쪽 날짜 라벨
+  if (viewMode === "full") {
+    for (let i = 0; i < cols; i++) {
+      let x = offsetX + i * spacing;
+      text(str(i + 1), x, offsetY - 20);
+    }
+  } else if (viewMode === "weeklyGroup") {
+    for (let i = 0; i < 7; i++) {
+      let x = offsetX + i * spacing;
+      text("D" + (i + 1), x, offsetY - 20);
+    }
+  }
+
+  // 왼쪽 시간 라벨
+  let startRow = (viewMode === "timeRange") ? timeStart : 0;
+  let endRow = (viewMode === "timeRange") ? timeEnd + 1 : rows;
+
+  for (let j = startRow; j < endRow; j++) {
+    let y = offsetY + j * spacing;
+    text(j + "h", offsetX - 25, y);
+  }
+
+  pop();
+}
 
 function drawLinesAnimated() {
   let grouped = {};
