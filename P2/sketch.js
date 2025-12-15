@@ -237,7 +237,7 @@ function drawGrid() {
       stroke(255);
       strokeWeight(1);
       fill(255,1);
-      ellipse(x, y, 10, 10);
+      ellipse(x, y, 5, 5);
       pop();
     }
   }
