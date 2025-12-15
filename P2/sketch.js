@@ -291,8 +291,8 @@ function drawCategoryButtons() {
 
   // 버튼 크기와 간격
   let bw = 40;  // 버튼 폭
-  let bh = 22;  // 버튼 높이
-  let gap = 8;  // 버튼 사이 간격
+  let bh = 25;  // 버튼 높이
+  let gap = 10;  // 버튼 사이 간격
 
   // 왼쪽 시간 축 근처에 세로 배열로 배치
   // 시간 라벨(offsetX - 40)보다 충분히 왼쪽으로 떨어뜨려 오른쪽 탭과 레이아웃 균형
