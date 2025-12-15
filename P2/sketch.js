@@ -17,12 +17,12 @@ let drawingProgress = 0; // 현재 그려지는 선의 진행 정도
 
 let categoryStyles = {
   "집":    { color: [255, 255, 224, 127],     weight: 20 },
-  "남의집": { color: [255, 255, 204, 180],     weight: 30 },
-  "학교":  { color: [255, 255, 0, 180],   weight: 30 },
-  "꼼방":  { color: [255, 255, 0, 180],   weight: 30 },
-  "식당":  { color: [0, 255, 0, 180],   weight: 30 },
-  "기타":  { color: [255, 204, 255, 180], weight: 30 },
-  "알바":  { color: [0, 255, 255, 180],   weight: 30 }
+  "남의집": { color: [255, 255, 204, 180],     weight: 22 },
+  "학교":  { color: [255, 255, 0, 180],   weight: 22 },
+  "꼼방":  { color: [255, 255, 0, 180],   weight: 22 },
+  "식당":  { color: [0, 255, 0, 180],   weight: 22 },
+  "기타":  { color: [255, 204, 255, 180], weight: 22 },
+  "알바":  { color: [0, 255, 255, 180],   weight: 22 }
 };
 
 let originalPoints = [{date: "01", y: 0, category: "집"},
