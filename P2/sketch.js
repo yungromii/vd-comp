@@ -235,9 +235,9 @@ function drawGrid() {
       // draw grid point with isolated style
       push();
       stroke(255);
-      strokeWeight(1);
+      strokeWeight(0.5);
       fill(255,1);
-      ellipse(x, y, 5, 5);
+      ellipse(x, y, 3, 3);
       pop();
     }
   }
