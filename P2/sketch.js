@@ -10,6 +10,7 @@ let viewMode = "full"; // "full", "timeRange", "weeklyGroup"
 let timeStart = 9;
 let timeEnd = 18;
 let weekGroup = 0;
+let pendingStart = null; // 시작점 임시 저장용
 
 let animationSpeed = 545; // 한 프레임당 선 그려질 길이 (픽셀)
 let drawingProgress = 0; // 현재 그려지는 선의 진행 정도
@@ -24,7 +25,7 @@ let categoryStyles = {
   "알바":  { color: [0, 255, 255, 180],   weight: 40 }
 };
 
-let points = [{date: "01", y: 0, category: "집"},
+let originalPoints = [{date: "01", y: 0, category: "집"},
   {date: "01", y: 20, category: "식당"},
   {date: "01", y: 21, category: "기타"},
   {date: "02", y: 0, category: "기타"},
@@ -164,11 +165,7 @@ let points = [{date: "01", y: 0, category: "집"},
   {date: "31", y: 17, category: "꼼방"},
   {date: "31", y: 23, category: "집"}];
 
-let drawnLines = [];
-let startPoint = null;
-let endPoint = null;
-
-let selectedCategory = "집"; // Default selected category for adding points
+let points = [];
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -183,7 +180,9 @@ function setup() {
 function draw() {
   background(0);
   drawGrid();
+  // Always call drawAllPoints, independent of drawLabels
   drawAllPoints();
+  // drawLabels();  <-- removed this line
   let totalLength = getTotalLineLength();
   drawLinesAnimated();
   drawingProgress += animationSpeed;
@@ -191,7 +190,6 @@ function draw() {
   if (drawingProgress > totalLength) {
     noLoop();
   }
-  drawLines();
 }
 // Calculate the total length of all lines to control animation
 function getTotalLineLength() {
@@ -212,12 +210,9 @@ function getTotalLineLength() {
     for (let i = 0; i < dayPoints.length; i++) {
       let p1 = dayPoints[i];
       let p2 = dayPoints[i + 1];
+      // 마지막 점에는 더 이상 선을 그리지 않음 (끝점까지만)
+      if (!p2) continue;
       let y1 = offsetY + p1.y * spacing;
-      if (!p2) {
-        let dayEndY = offsetY + (rows - 1) * spacing;
-        total += abs(dayEndY - y1);
-        continue;
-      }
       let y2 = offsetY + p2.y * spacing;
       total += abs(y2 - y1);
     }
@@ -277,31 +272,9 @@ function drawLinesAnimated() {
     for (let i = 0; i < dayPoints.length; i++) {
       let p1 = dayPoints[i];
       let p2 = dayPoints[i + 1];
+      // 마지막 점이면 더 이상 선을 그리지 않음 (끝점까지만)
+      if (!p2) continue;
       let y1 = offsetY + p1.y * spacing;
-      if (!p2) {
-        // 마지막 점이면 하루 끝(y=23h)까지만 그리기
-        let dayEndY = offsetY + (rows - 1) * spacing;
-        let style = categoryStyles[p1.category] || { color: [150, 150, 150, 127], weight: 6 };
-        // isolate stroke state
-        push();
-        if(p1.category === "집"){
-          noFill();
-          stroke(...style.color);
-          strokeWeight(style.weight);
-        } else {
-          stroke(...style.color);
-          strokeWeight(style.weight);
-        }
-        let lineLength = abs(dayEndY - y1);
-        if (drawingProgress > totalDrawn) {
-          let visibleLength = min(drawingProgress - totalDrawn, lineLength);
-          let yEnd = y1 + visibleLength * (dayEndY > y1 ? 1 : -1);
-          line(x, y1, x, yEnd);
-        }
-        pop();
-        totalDrawn += lineLength;
-        continue;
-      }
       let y2 = offsetY + p2.y * spacing;
 
       let style = categoryStyles[p1.category] || { color: [150, 150, 150, 127], weight: 6 };
@@ -331,6 +304,16 @@ function drawLinesAnimated() {
 }
 
 function keyPressed() {
+  // '0' 키를 누르면 원래 데이터 불러오기
+  if (key === '0') {
+    // 깊은 복사로 originalPoints 내용을 points에 복제
+    points = originalPoints.map(p => ({ date: p.date, y: p.y, category: p.category }));
+    pendingStart = null;
+    drawingProgress = 0;
+    loop();
+    return;
+  }
+
   if (key === '1') {
     viewMode = "full";
   } else if (key === '2') {
@@ -345,40 +328,86 @@ function keyPressed() {
     viewMode = "weeklyGroup"; weekGroup = 2;
   } else if (key === '6') {
     viewMode = "weeklyGroup"; weekGroup = 3;
-  } else if (key === 'p' || key === 'P') {
-    startDrawing();
   }
 
   drawingProgress = 0;
   loop(); // 다시 애니메이션 시작
 }
-
-function startDrawing() {
-  // Placeholder for any animation start logic if needed
-  // Currently handled by loop() in keyPressed
-}
-
 function mousePressed() {
   let threshold = 10;
+  let clicked = null;
+
+  // 클릭한 위치에 가장 가까운 그리드 좌표 찾기
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
       let x = offsetX + i * spacing;
       let y = offsetY + j * spacing;
       let d = dist(mouseX, mouseY, x, y);
       if (d < threshold) {
-        // Instead of conditional on existing points, allow adding or updating
-        let matched = points.find(p => int(p.date) - 1 === i && p.y === j);
-        if (!matched) {
-          // Add new point with selectedCategory
-          points.push({date: nf(i + 1, 2), y: j, category: selectedCategory});
-        } else {
-          // Update category of existing point
-          matched.category = selectedCategory;
-        }
+        clicked = { dateIndex: i, row: j };
         break;
       }
     }
+    if (clicked) break;
   }
+
+  if (!clicked) return; // 아무 점도 안 눌렀으면 종료
+
+  // 아직 시작점이 선택되지 않은 상태 → 시작점 + 카테고리 선택
+  if (pendingStart === null) {
+    let categories = Object.keys(categoryStyles);
+    if (categories.length === 0) return;
+
+    // 카테고리 선택 프롬프트 (번호로 선택)
+    let message = "카테고리를 선택하세요:\n";
+    for (let k = 0; k < categories.length; k++) {
+      message += (k + 1) + ": " + categories[k] + "\n";
+    }
+    let input = prompt(message);
+    if (!input) return;
+
+    let idx = parseInt(input.trim(), 10) - 1;
+    if (isNaN(idx) || idx < 0 || idx >= categories.length) {
+      alert("잘못된 번호입니다.");
+      return;
+    }
+
+    let chosenCategory = categories[idx];
+
+    // 시작점 임시 저장
+    pendingStart = {
+      dateIndex: clicked.dateIndex,
+      row: clicked.row,
+      category: chosenCategory
+    };
+    return;
+  }
+
+  // 여기까지 왔으면 pendingStart가 이미 있음 → 끝점 선택 단계
+  // 같은 날짜(같은 x축) 안에서만 허용
+  if (clicked.dateIndex !== pendingStart.dateIndex) {
+    alert("같은 날짜의 그리드만 시작/끝으로 선택할 수 있어요.");
+    return;
+  }
+
+  let dateIndex = clicked.dateIndex;
+  let startRow = pendingStart.row;
+  let endRow = clicked.row;
+  let cat = pendingStart.category;
+  let dateStr = nf(dateIndex + 1, 2);
+
+  // 시작/끝 y 순서 정리
+  let yMin = Math.min(startRow, endRow);
+  let yMax = Math.max(startRow, endRow);
+
+  // 동일한 날짜/카테고리/좌표의 기존 포인트가 있어도 그냥 추가 (중복 허용)
+  points.push({ date: dateStr, y: yMin, category: cat });
+  points.push({ date: dateStr, y: yMax, category: cat });
+
+  // 상태 초기화 후 애니메이션 다시 시작
+  pendingStart = null;
+  drawingProgress = 0;
+  loop();
 }
 
 function drawAllPoints() {
@@ -389,46 +418,49 @@ function drawAllPoints() {
   }
 
   let sortedDates = Object.keys(grouped).sort((a, b) => int(a) - int(b));
-  for (let i = 0; i < cols; i++) {
-    for (let j = 0; j < rows; j++) {
-      let dateKey = nf(i + 1, 2);
-      let dateIndex = i;
-      if (viewMode === "weeklyGroup") {
-        let groupStart = weekGroup * 7;
-        if (dateIndex < groupStart || dateIndex >= groupStart + 7) continue;
-      }
-      let x = (viewMode === "weeklyGroup")
-        ? offsetX + (dateIndex - weekGroup * 7) * spacing
-        : offsetX + dateIndex * spacing;
-      let y = offsetY + j * spacing;
-      // Find if there is a point at this grid cell
-      let dayPoints = grouped[dateKey] || [];
-      let point = dayPoints.find(p => p.y === j);
-      if (point) {
-        let style = categoryStyles[point.category] || { color: [150, 150, 150, 127], weight: 6 };
-        push();
-        strokeWeight(25);
-        stroke(...style.color);
-        fill(...style.color);
-        ellipse(x, y, 8, 8);
-        pop();
-      } else {
-        // Draw default appearance for empty cells
-        push();
-        strokeWeight(25);
-        stroke(100, 100, 100, 50);
-        fill(100, 100, 100, 30);
-        ellipse(x, y, 8, 8);
-        pop();
-      }
+  for (let date of sortedDates) {
+    let dateIndex = int(date) - 1;
+    if (viewMode === "weeklyGroup") {
+      let groupStart = weekGroup * 7;
+      if (dateIndex < groupStart || dateIndex >= groupStart + 7) continue;
+    }
+
+    let x = (viewMode === "weeklyGroup")
+      ? offsetX + (dateIndex - weekGroup * 7) * spacing
+      : offsetX + dateIndex * spacing;
+
+    let dayPoints = grouped[date];
+    for (let p of dayPoints) {
+      let y = offsetY + p.y * spacing;
+      let style = categoryStyles[p.category] || { color: [150, 150, 150, 127], weight: 6 };
+      push();
+      stroke(...style.color);
+      strokeWeight(style.weight / 2);
+      fill(...style.color);
+      ellipse(x, y, 8, 8);
+      pop();
     }
   }
 }
 
 function drawLines() {
-  strokeWeight(25);
-  stroke(0); // Default stroke color, or customizable
-  for (let l of drawnLines) {
-    line(l.start.x, l.start.y, l.end.x, l.end.y);
+  stroke(0); // black stroke
+  strokeWeight(1);
+  noFill();
+
+  // Filter and sort "집" category points by x (date), then y (time)
+  let housePoints = points
+    .filter(p => p.category === "집")
+    .sort((a, b) => int(a.date) - int(b.date) || a.y - b.y);
+
+  if (housePoints.length > 1) {
+    beginShape();
+    for (let i = 0; i < housePoints.length; i++) {
+      let pt = housePoints[i];
+      let x = offsetX + (int(pt.date) - 1) * spacing;
+      let y = offsetY + pt.y * spacing;
+      vertex(x, y);
+    }
+    endShape();
   }
 }
