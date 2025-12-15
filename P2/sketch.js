@@ -296,7 +296,7 @@ function drawCategoryButtons() {
   // 그리드 상단부(날짜 텍스트 위) 기준으로 가운데 정렬
   // 날짜 텍스트는 offsetY - 35에 있으므로 그보다 약간 위쪽에 배치
   let bx = offsetX + (gridWidth - totalButtonsWidth) / 2;
-  let by = offsetY - 70;
+  let by = offsetY - 90;
 
   textAlign(CENTER, CENTER);
   textSize(10);
