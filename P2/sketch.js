@@ -289,8 +289,8 @@ function drawCategoryButtons() {
   let gap = 8;  // 버튼 사이 간격
 
   // 왼쪽 시간 축 근처에 세로 배열로 배치
-  // 시간 라벨은 offsetX - 40에 있으므로, 그보다 더 왼쪽으로
-  let bx = offsetX - 120; // 카테고리 버튼 X 위치
+  // 시간 라벨(offsetX - 40)보다 충분히 왼쪽으로 떨어뜨려 오른쪽 탭과 레이아웃 균형
+  let bx = offsetX - 160; // 카테고리 버튼 X 위치 (이전보다 더 왼쪽으로 이동)
   let by = offsetY;       // 첫 번째 버튼의 시작 Y (0시 위치 근처에서 시작)
 
   textAlign(CENTER, CENTER);
@@ -441,7 +441,7 @@ function mousePressed() {
   let gap = 8;
 
   // 시간 축 왼쪽에 세로 배열 (drawCategoryButtons와 동일)
-  let bx = offsetX - 120;
+  let bx = offsetX - 160;
   let by = offsetY;
 
   for (let i = 0; i < categories.length; i++) {
