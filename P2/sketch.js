@@ -167,7 +167,13 @@ let originalPoints = [{date: "01", y: 0, category: "집"},
   {date: "31", y: 17, category: "꼼방"},
   {date: "31", y: 23, category: "집"}];
 
-let points = [];
+let datasetStore = {
+  custom: [],
+  october: originalPoints.map(p => ({ date: p.date, y: p.y, category: p.category }))
+};
+
+let datasetOrder = ["custom", "october"];
+let points = datasetStore[currentDataset];
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -332,25 +338,39 @@ function drawUserTabs() {
 
   let bw = 90; // 탭 폭
   let bh = 26; // 탭 높이
+  let gap = 6; // 탭 사이 간격
 
-  // 배경 박스
-  if (currentDataset === "october") {
-    fill(255, 255, 255, 230); // 선택된 상태 강조
-  } else {
-    fill(40, 40, 40, 200);
-  }
-  noStroke();
-  rect(ux, uy, bw, bh, 4);
-
-  // 텍스트
-  if (currentDataset === "october") {
-    fill(0);
-  } else {
-    fill(255);
-  }
   textAlign(CENTER, CENTER);
   textSize(10);
-  text("october", ux + bw / 2, uy + bh / 2);
+  noStroke();
+
+  // 데이터셋 탭들 (custom, october, 그리고 이후 추가되는 id들)
+  for (let i = 0; i < datasetOrder.length; i++) {
+    let id = datasetOrder[i];
+    let x = ux;
+    let y = uy + i * (bh + gap);
+
+    if (currentDataset === id) {
+      fill(255, 255, 255, 230); // 선택된 상태 강조
+    } else {
+      fill(40, 40, 40, 200);
+    }
+    rect(x, y, bw, bh, 4);
+
+    if (currentDataset === id) {
+      fill(0);
+    } else {
+      fill(255);
+    }
+    text(id, x + bw / 2, y + bh / 2);
+  }
+
+  // ID 추가 버튼
+  let addY = uy + datasetOrder.length * (bh + gap) + 10;
+  fill(40, 40, 40, 200);
+  rect(ux, addY, bw, bh, 4);
+  fill(255);
+  text("+ id", ux + bw / 2, addY + bh / 2);
 
   pop();
 }
@@ -458,21 +478,50 @@ function mousePressed() {
     }
   }
 
-  // 1.5) 오른쪽 'october' 탭을 눌렀는지 확인
+  // 1.5) 오른쪽 데이터셋 탭을 눌렀는지 확인 (custom / october / 추가된 id들)
   let visibleCols = (viewMode === "weeklyGroup") ? 7 : cols;
   let gridWidth = (visibleCols - 1) * spacing;
   let ux = offsetX + gridWidth + 80; // drawUserTabs와 동일한 위치
   let uy = offsetY;
   let tabW = 90;
   let tabH = 26;
+  let tabGap = 6;
 
-  if (mouseX >= ux && mouseX <= ux + tabW && mouseY >= uy && mouseY <= uy + tabH) {
-    // 'october' 탭 클릭 → 저장된 원래 데이터 로드
-    currentDataset = "october";
-    points = originalPoints.map(p => ({ date: p.date, y: p.y, category: p.category }));
-    pendingStart = null;
-    drawingProgress = 0;
-    loop();
+  // 기존 데이터셋 탭 클릭 처리
+  for (let i = 0; i < datasetOrder.length; i++) {
+    let id = datasetOrder[i];
+    let tx = ux;
+    let ty = uy + i * (tabH + tabGap);
+    if (mouseX >= tx && mouseX <= tx + tabW && mouseY >= ty && mouseY <= ty + tabH) {
+      currentDataset = id;
+      points = datasetStore[id];
+      pendingStart = null;
+      drawingProgress = 0;
+      loop();
+      return;
+    }
+  }
+
+  // "+ id" 버튼 클릭 처리
+  let addY = uy + datasetOrder.length * (tabH + tabGap) + 10;
+  if (mouseX >= ux && mouseX <= ux + tabW && mouseY >= addY && mouseY <= addY + tabH) {
+    let newId = prompt("Enter a new ID name:");
+    if (newId) {
+      newId = newId.trim();
+      if (newId.length > 0) {
+        if (datasetStore[newId]) {
+          alert("That ID already exists.");
+        } else {
+          datasetStore[newId] = [];
+          datasetOrder.push(newId);
+          currentDataset = newId;
+          points = datasetStore[newId];
+          pendingStart = null;
+          drawingProgress = 0;
+          loop();
+        }
+      }
+    }
     return;
   }
 
