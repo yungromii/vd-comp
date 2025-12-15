@@ -242,35 +242,8 @@ function drawGrid() {
   }
   pop();
 }
-
-function drawLabels() {
-  push();
-  textAlign(CENTER, CENTER);
-  textSize(10);
-  fill(50); // solid label color
-
-  if (viewMode === "full") {
-    for (let i = 0; i < cols; i++) {
-      let x = offsetX + i * spacing;
-      text(str(i + 1), x, offsetY - 30);
-    }
-  } else if (viewMode === "weeklyGroup") {
-    for (let i = 0; i < 7; i++) {
-      let x = offsetX + i * spacing;
-      text("D" + (i + 1), x, offsetY - 30);
-    }
-  }
-
-  let startRow = (viewMode === "timeRange") ? timeStart : 0;
-  let endRow = (viewMode === "timeRange") ? timeEnd + 1 : rows;
-
-  for (let j = startRow; j < endRow; j++) {
-    let y = offsetY + j * spacing;
-    text(j + "h", offsetX - 30, y);
-  }
-  pop();
-}
-
+  //잘라내기한거
+  
 function drawLinesAnimated() {
   let grouped = {};
   for (let p of points) {
