@@ -177,7 +177,7 @@ function setup() {
 function draw() {
   background(0);
   drawGrid();
-  drawLabels();
+  // drawLabels();  // removed to disable text rendering
   let totalLength = getTotalLineLength();
   drawAllPoints();
   drawLinesAnimated();
@@ -244,31 +244,7 @@ function drawGrid() {
 }
 
 function drawLabels() {
-  push();
-  textAlign(CENTER, CENTER);
-  textSize(10);
-  fill(50); // solid label color
-
-  if (viewMode === "full") {
-    for (let i = 0; i < cols; i++) {
-      let x = offsetX + i * spacing;
-      text(str(i + 1), x, offsetY - 30);
-    }
-  } else if (viewMode === "weeklyGroup") {
-    for (let i = 0; i < 7; i++) {
-      let x = offsetX + i * spacing;
-      text("D" + (i + 1), x, offsetY - 30);
-    }
-  }
-
-  let startRow = (viewMode === "timeRange") ? timeStart : 0;
-  let endRow = (viewMode === "timeRange") ? timeEnd + 1 : rows;
-
-  for (let j = startRow; j < endRow; j++) {
-    let y = offsetY + j * spacing;
-    text(j + "h", offsetX - 30, y);
-  }
-  pop();
+  // text rendering disabled
 }
 
 function drawLinesAnimated() {
@@ -370,6 +346,25 @@ function keyPressed() {
   loop(); // 다시 애니메이션 시작
 }
 function mousePressed() {
+  for (let p of points) {
+    let x = offsetX + (int(p.date) - 1) * spacing;
+    let y = offsetY + p.y * spacing;
+    let d = dist(mouseX, mouseY, x, y);
+    if (d < 10) {  // check if mouse is near the point
+      let newCategory = prompt("카테고리를 입력하세요 (예: 집, 학교, 식당)");
+      if (newCategory) {
+        p.category = newCategory;
+        // Add a new style if category doesn't exist yet
+        if (!categoryStyles[newCategory]) {
+          categoryStyles[newCategory] = {
+            color: [random(50, 255), random(50, 255), random(50, 255), 127],
+            weight: 3
+          };
+        }
+      }
+      break;
+    }
+  }
   drawingProgress = 0;
   loop(); // start animation
 }
@@ -404,5 +399,27 @@ function drawAllPoints() {
       ellipse(x, y, 8, 8);
       pop();
     }
+  }
+}
+
+function drawLines() {
+  stroke(0); // black stroke
+  strokeWeight(1);
+  noFill();
+
+  // Filter and sort "집" category points by x (date), then y (time)
+  let housePoints = points
+    .filter(p => p.category === "집")
+    .sort((a, b) => int(a.date) - int(b.date) || a.y - b.y);
+
+  if (housePoints.length > 1) {
+    beginShape();
+    for (let i = 0; i < housePoints.length; i++) {
+      let pt = housePoints[i];
+      let x = offsetX + (int(pt.date) - 1) * spacing;
+      let y = offsetY + pt.y * spacing;
+      vertex(x, y);
+    }
+    endShape();
   }
 }
