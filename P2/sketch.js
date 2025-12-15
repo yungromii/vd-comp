@@ -254,12 +254,12 @@ function drawLabels() {
   if (viewMode === "full") {
     for (let i = 0; i < cols; i++) {
       let x = offsetX + i * spacing;
-      text(str(i + 1), x, offsetY - 20);
+      text(str(i + 1), x, offsetY - 35);
     }
   } else if (viewMode === "weeklyGroup") {
     for (let i = 0; i < 7; i++) {
       let x = offsetX + i * spacing;
-      text("D" + (i + 1), x, offsetY - 20);
+      text("D" + (i + 1), x, offsetY - 35);
     }
   }
 
@@ -269,7 +269,7 @@ function drawLabels() {
 
   for (let j = startRow; j < endRow; j++) {
     let y = offsetY + j * spacing;
-    text(j + "h", offsetX - 25, y);
+    text(j + "h", offsetX - 40, y);
   }
 
   pop();
