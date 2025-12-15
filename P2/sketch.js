@@ -264,6 +264,7 @@ function drawLabels() {
   }
 
   // 왼쪽 시간 라벨
+  fill (125);
   let startRow = (viewMode === "timeRange") ? timeStart : 0;
   let endRow = (viewMode === "timeRange") ? timeEnd + 1 : rows;
 
