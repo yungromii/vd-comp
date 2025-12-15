@@ -269,7 +269,7 @@ function drawLabels() {
 
   for (let j = startRow; j < endRow; j++) {
     let y = offsetY + j * spacing;
-    text(j + "h", offsetX - 40, y);
+    text(j + "", offsetX - 40, y);
   }
 
   pop();
