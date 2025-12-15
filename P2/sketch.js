@@ -11,6 +11,7 @@ let timeStart = 9;
 let timeEnd = 18;
 let weekGroup = 0;
 let pendingStart = null; // 시작점 임시 저장용
+let selectedCategory = null; // 고정 버튼으로 선택된 카테고리
 
 let animationSpeed = 545; // 한 프레임당 선 그려질 길이 (픽셀)
 let drawingProgress = 0; // 현재 그려지는 선의 진행 정도
@@ -181,6 +182,7 @@ function draw() {
   background(0);
   drawGrid();
   drawLabels();        // 날짜/시간 텍스트 다시 표시
+  drawCategoryButtons(); // 고정된 카테고리 버튼 UI
   drawAllPoints();
   let totalLength = getTotalLineLength();
   drawLinesAnimated();
@@ -275,6 +277,54 @@ function drawLabels() {
 
   pop();
 }
+function drawCategoryButtons() {
+  push();
+  let categories = Object.keys(categoryStyles);
+
+  // 버튼 크기와 간격
+  let bw = 70;  // 버튼 폭
+  let bh = 24;  // 버튼 높이
+  let gap = 10; // 버튼 사이 간격
+
+  // 현재 모드에서 보이는 컬럼 수 (full: 31, weeklyGroup: 7)
+  let visibleCols = (viewMode === "weeklyGroup") ? 7 : cols;
+  let gridWidth = (visibleCols - 1) * spacing;
+
+  // 버튼 전체 폭 계산 (가운데 정렬용)
+  let totalButtonsWidth = categories.length * bw + (categories.length - 1) * gap;
+
+  // 그리드 상단부(날짜 텍스트 위) 기준으로 가운데 정렬
+  // 날짜 텍스트는 offsetY - 35에 있으므로 그보다 약간 위쪽에 배치
+  let bx = offsetX + (gridWidth - totalButtonsWidth) / 2;
+  let by = offsetY - 70;
+
+  textAlign(CENTER, CENTER);
+  textSize(10);
+  noStroke();
+
+  for (let i = 0; i < categories.length; i++) {
+    let cat = categories[i];
+    let x = bx + i * (bw + gap);
+    let y = by;
+
+    // 선택된 카테고리는 하이라이트
+    if (selectedCategory === cat) {
+      fill(255, 255, 255, 220);
+    } else {
+      fill(40, 40, 40, 200);
+    }
+    rect(x, y, bw, bh, 4);
+
+    // 텍스트
+    if (selectedCategory === cat) {
+      fill(0);
+    } else {
+      fill(255);
+    }
+    text(cat, x + bw / 2, y + bh / 2);
+  }
+  pop();
+}
 
 function drawLinesAnimated() {
   let grouped = {};
@@ -363,6 +413,39 @@ function keyPressed() {
   loop(); // 다시 애니메이션 시작
 }
 function mousePressed() {
+  // 1) 먼저 상단 카테고리 버튼을 눌렀는지 확인
+  let categories = Object.keys(categoryStyles);
+
+  // 버튼 크기와 간격 (drawCategoryButtons와 동일)
+  let bw = 70;
+  let bh = 24;
+  let gap = 10;
+
+  // 현재 모드에서 보이는 컬럼 수에 따라 그리드 폭 계산
+  let visibleCols = (viewMode === "weeklyGroup") ? 7 : cols;
+  let gridWidth = (visibleCols - 1) * spacing;
+
+  // 버튼 전체 폭
+  let totalButtonsWidth = categories.length * bw + (categories.length - 1) * gap;
+
+  // 그리드 상단부 기준 가운데 정렬 (drawCategoryButtons와 동일)
+  let bx = offsetX + (gridWidth - totalButtonsWidth) / 2;
+  let by = offsetY - 70;
+
+  for (let i = 0; i < categories.length; i++) {
+    let x = bx + i * (bw + gap);
+    let y = by;
+    if (mouseX >= x && mouseX <= x + bw && mouseY >= y && mouseY <= y + bh) {
+      // 이 버튼 영역 클릭 → 선택 카테고리 설정
+      selectedCategory = categories[i];
+      pendingStart = null;      // 진행 중이던 선 선택 초기화
+      drawingProgress = 0;
+      loop();                   // 하이라이트 업데이트
+      return;
+    }
+  }
+
+  // 2) 버튼이 아닌 영역 → 그리드에서 점 선택 로직
   let threshold = 10;
   let clicked = null;
 
@@ -382,32 +465,18 @@ function mousePressed() {
 
   if (!clicked) return; // 아무 점도 안 눌렀으면 종료
 
-  // 아직 시작점이 선택되지 않은 상태 → 시작점 + 카테고리 선택
+  // 아직 카테고리 버튼이 선택되지 않았다면
+  if (!selectedCategory) {
+    alert("먼저 위의 카테고리 버튼 중 하나를 선택하세요.");
+    return;
+  }
+
+  // 아직 시작점이 선택되지 않은 상태 → 시작점만 저장
   if (pendingStart === null) {
-    let categories = Object.keys(categoryStyles);
-    if (categories.length === 0) return;
-
-    // 카테고리 선택 프롬프트 (번호로 선택)
-    let message = "choose a category:\n";
-    for (let k = 0; k < categories.length; k++) {
-      message += (k + 1) + ": " + categories[k] + "\n";
-    }
-    let input = prompt(message);
-    if (!input) return;
-
-    let idx = parseInt(input.trim(), 10) - 1;
-    if (isNaN(idx) || idx < 0 || idx >= categories.length) {
-      alert("Invalid number.");
-      return;
-    }
-
-    let chosenCategory = categories[idx];
-
-    // 시작점 임시 저장
     pendingStart = {
       dateIndex: clicked.dateIndex,
       row: clicked.row,
-      category: chosenCategory
+      category: selectedCategory
     };
     return;
   }
