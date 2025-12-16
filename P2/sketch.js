@@ -273,20 +273,20 @@ function drawLabels() {
       let x = offsetX + i * spacing;
       // 위쪽 (흰색)
       fill(125);
-      text(str(i + 1), x, offsetY - 25);
+      text(str(i + 1), x, offsetY - 35);
       // 아래쪽 (회색)
       fill(255);
-      text(str(i + 1), x, offsetY + gridHeight + 25);
+      text(str(i + 1), x, offsetY + gridHeight + 35);
     }
   } else if (viewMode === "weeklyGroup") {
     for (let i = 0; i < 7; i++) {
       let x = offsetX + i * spacing;
       // 위쪽 (흰색)
       fill(255);
-      text("D" + (i + 1), x, offsetY - 25);
+      text("D" + (i + 1), x, offsetY - 35);
       // 아래쪽 (회색)
       fill(125);
-      text("D" + (i + 1), x, offsetY + gridHeight + 25);
+      text("D" + (i + 1), x, offsetY + gridHeight + 35);
     }
   }
 
@@ -300,10 +300,10 @@ function drawLabels() {
     let y = offsetY + j * spacing;
     // 왼쪽 (흰색)
     fill(125);
-    text(j + "", offsetX - 30, y);
+    text(j + "", offsetX - 35, y);
     // 오른쪽 (회색)
     fill(255);
-    text(j + "", offsetX + gridWidth + 30, y);
+    text(j + "", offsetX + gridWidth + 35, y);
   }
 
   // --------------------
@@ -313,12 +313,12 @@ function drawLabels() {
 
   // 아래쪽: "dates ←" (숫자보다 더 아래)
   let bottomX = offsetX + gridWidth / 2;
-  let bottomY = offsetY + gridHeight + 60; // 숫자(25)보다 더 멀리 45로
+  let bottomY = offsetY + gridHeight + 70; // 숫자(25)보다 더 멀리 45로
   text("dates ←", bottomX, bottomY);
 
   // 오른쪽: 세로로 "hours ↑" (숫자보다 더 바깥)
   push();
-  translate(offsetX + gridWidth + 65, offsetY + gridHeight / 2); // 숫자(30)보다 더 멀리 50으로
+  translate(offsetX + gridWidth + 70, offsetY + gridHeight / 2); // 숫자(30)보다 더 멀리 50으로
   rotate(-HALF_PI); // 세로로 돌리기
   text("hours ↑", 0, 0);
   pop();
