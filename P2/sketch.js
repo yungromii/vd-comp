@@ -550,7 +550,7 @@ function mousePressed() {
 
   // 아직 카테고리 버튼이 선택되지 않았다면
   if (!selectedCategory) {
-    alert("먼저 위의 카테고리 버튼 중 하나를 선택하세요.");
+    alert("Please select one of the category buttons on the left first.");
     return;
   }
 
