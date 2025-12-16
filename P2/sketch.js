@@ -336,8 +336,8 @@ function drawCategoryButtons() {
 
   // 왼쪽 시간 축 근처에 세로 배열로 배치
   // 시간 라벨(offsetX - 40)보다 충분히 왼쪽으로 떨어뜨려 오른쪽 탭과 레이아웃 균형
-  let bx = offsetX - 160; // 카테고리 버튼 X 위치 (이전보다 더 왼쪽으로 이동)
-  let by = offsetY;       // 첫 번째 버튼의 시작 Y (0시 위치 근처에서 시작)
+  let bx = offsetX - 160; // 카테고리 버튼 X 위치
+  let by = offsetY;       // 첫 번째 버튼의 시작 Y
 
   textAlign(CENTER, CENTER);
   textFont('Helvetica');
@@ -349,19 +349,27 @@ function drawCategoryButtons() {
     let x = bx;
     let y = by + i * (bh + gap);
 
-    // 선택된 카테고리는 하이라이트
+    // 선택된 카테고리는 categoryStyles에 정의된 색을 배경으로 사용
     if (selectedCategory === cat) {
-      fill(255, 255, 255, 220);
+      let style = categoryStyles[cat];
+      if (style && style.color) {
+        let c = style.color;
+        fill(c[0], c[1], c[2], c[3]);
+      } else {
+        // 혹시 스타일이 없으면 흰색으로 fallback
+        fill(255, 255, 255, 220);
+      }
     } else {
+      // 선택되지 않은 버튼은 어두운 회색
       fill(40, 40, 40, 200);
     }
     rect(x, y, bw, bh, 4);
 
     // 텍스트
     if (selectedCategory === cat) {
-      fill(0);
+      fill(0);     // 선택된 버튼에서는 글자를 검정으로
     } else {
-      fill(255);
+      fill(255);   // 나머지는 흰색 글자
     }
     text(cat, x + bw / 2, y + bh / 2);
   }
