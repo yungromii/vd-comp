@@ -291,7 +291,7 @@ function drawLabels() {
   push();
   translate(offsetX + gridWidth + 70, offsetY + gridHeight / 2);
   rotate(-HALF_PI);
-  text("hours ↑", 0, 0);
+  text("← hours", 0, 0);
   pop();
 
   pop();
