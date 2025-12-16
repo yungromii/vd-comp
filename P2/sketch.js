@@ -272,10 +272,10 @@ function drawLabels() {
     for (let i = 0; i < cols; i++) {
       let x = offsetX + i * spacing;
       // 위쪽 (흰색)
-      fill(255);
+      fill(125);
       text(str(i + 1), x, offsetY - 25);
       // 아래쪽 (회색)
-      fill(125);
+      fill(255);
       text(str(i + 1), x, offsetY + gridHeight + 25);
     }
   } else if (viewMode === "weeklyGroup") {
