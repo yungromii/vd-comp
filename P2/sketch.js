@@ -411,6 +411,33 @@ function drawAllPoints() {
       pop();
     }
   }
+
+  // 🔹 아직 끝점을 고르지 않은 "시작점"도 화면에 표시
+  if (pendingStart !== null) {
+    let dateIndex = pendingStart.dateIndex;
+
+    // 현재 뷰에 보이는 날짜인지 체크 (weeklyGroup일 때)
+    if (viewMode === "weeklyGroup") {
+      let groupStart = weekGroup * 7;
+      if (dateIndex < groupStart || dateIndex >= groupStart + 7) {
+        return; // 화면 밖이면 안 그림
+      }
+    }
+
+    let x = (viewMode === "weeklyGroup")
+      ? offsetX + (dateIndex - weekGroup * 7) * spacing
+      : offsetX + dateIndex * spacing;
+
+    let y = offsetY + pendingStart.row * spacing;
+    let style = categoryStyles[pendingStart.category] || { color: [255, 255, 255, 200], weight: 10 };
+
+    push();
+    stroke(...style.color);
+    strokeWeight(style.weight / 2);
+    fill(...style.color);
+    ellipse(x, y, 10, 10); // 살짝 더 크게
+    pop();
+  }
 }
 
 // 선을 한 번에 그리는 버전 (애니메이션 X)
