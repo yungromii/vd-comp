@@ -21,7 +21,7 @@ const CAT_BTN_H   = 26;
 const CAT_BTN_GAP = 10;
 const CAT_BTN_X_OFFSET = 160;  // 시간축 왼쪽으로부터 떨어진 정도
 
-const TAB_W       = 70;
+const TAB_W       = 50;
 const TAB_H       = 26;
 const TAB_GAP     = 10;
 const TAB_X_MARGIN = 100;      // 그리드 오른쪽으로부터 떨어진 정도
@@ -317,10 +317,18 @@ function drawCategoryButtons() {
 
     let style = categoryStyles[cat];
     if (selectedCategory === cat) {
-      // 선택된 버튼: 해당 카테고리 색으로 배경
-      fill(style.color[0], style.color[1], style.color[2], 220);
+      // ✅ 선택된 버튼: 테두리 없음 + 카테고리 색 배경
+      noStroke();
+      if (style) {
+        fill(style.color[0], style.color[1], style.color[2], 230); // 약간 더 진하게
+      } else {
+        fill(255);
+      }
     } else {
-      fill(40, 40, 40, 200);
+      // ✅ 선택 안 된 버튼: 검정 배경 + 0.5 흰색 스트록
+      stroke(255, 255, 255, 127); // 0.5 투명 흰색 테두리
+      strokeWeight(1);
+      fill(0); // 검정 배경
     }
     rect(x, y, CAT_BTN_W, CAT_BTN_H, 4);
 
