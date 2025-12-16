@@ -317,18 +317,10 @@ function drawCategoryButtons() {
 
     let style = categoryStyles[cat];
     if (selectedCategory === cat) {
-      // ✅ 선택된 버튼: 테두리 없음 + 카테고리 색 배경
-      noStroke();
-      if (style) {
-        fill(style.color[0], style.color[1], style.color[2], 230); // 약간 더 진하게
-      } else {
-        fill(255);
-      }
+      // 선택된 버튼: 해당 카테고리 색으로 배경
+      fill(style.color[0], style.color[1], style.color[2], 220);
     } else {
-      // ✅ 선택 안 된 버튼: 검정 배경 + 0.5 흰색 스트록
-      stroke(255); // 0.5 투명 흰색 테두리
-      strokeWeight(1);
-      fill(0); // 검정 배경
+      fill(40, 40, 40, 200);
     }
     rect(x, y, CAT_BTN_W, CAT_BTN_H, 4);
 
