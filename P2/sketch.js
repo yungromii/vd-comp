@@ -268,22 +268,24 @@ function drawLabels() {
   // --------------------
   // 1) 날짜 숫자 (위/아래)
   // --------------------
-  fill(125); // 숫자는 모두 회색
-
   if (viewMode === "full") {
     for (let i = 0; i < cols; i++) {
       let x = offsetX + i * spacing;
-      // 위쪽
+      // 위쪽 (흰색)
+      fill(255);
       text(str(i + 1), x, offsetY - 25);
-      // 아래쪽
+      // 아래쪽 (회색)
+      fill(125);
       text(str(i + 1), x, offsetY + gridHeight + 25);
     }
   } else if (viewMode === "weeklyGroup") {
     for (let i = 0; i < 7; i++) {
       let x = offsetX + i * spacing;
-      // 위쪽
+      // 위쪽 (흰색)
+      fill(255);
       text("D" + (i + 1), x, offsetY - 25);
-      // 아래쪽
+      // 아래쪽 (회색)
+      fill(125);
       text("D" + (i + 1), x, offsetY + gridHeight + 25);
     }
   }
@@ -296,9 +298,11 @@ function drawLabels() {
 
   for (let j = startRow; j < endRow; j++) {
     let y = offsetY + j * spacing;
-    // 왼쪽
+    // 왼쪽 (흰색)
+    fill(255);
     text(j + "", offsetX - 30, y);
-    // 오른쪽
+    // 오른쪽 (회색)
+    fill(125);
     text(j + "", offsetX + gridWidth + 30, y);
   }
 
