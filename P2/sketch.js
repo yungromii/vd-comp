@@ -326,7 +326,7 @@ function drawCategoryButtons() {
       }
     } else {
       // ✅ 선택 안 된 버튼: 검정 배경 + 0.5 흰색 스트록
-      stroke(255, 255, 255, 127); // 0.5 투명 흰색 테두리
+      stroke(255); // 0.5 투명 흰색 테두리
       strokeWeight(1);
       fill(0); // 검정 배경
     }
