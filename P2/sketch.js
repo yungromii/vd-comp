@@ -177,6 +177,7 @@ let points = datasetStore[currentDataset];
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  textFont('Helvetica');
   strokeCap(ROUND);
   spacing = min((width - 200) / (cols - 1), (height - 200) / (rows - 1));
   offsetX = (width - spacing * (cols - 1)) / 2;
@@ -300,6 +301,7 @@ function drawCategoryButtons() {
   let by = offsetY;       // 첫 번째 버튼의 시작 Y (0시 위치 근처에서 시작)
 
   textAlign(CENTER, CENTER);
+  textFont('Helvetica');
   textSize(10);
   noStroke();
 
@@ -341,6 +343,7 @@ function drawUserTabs() {
   let gap = 10; // 탭 사이 간격
 
   textAlign(CENTER, CENTER);
+  textFont('Helvetica');
   textSize(10);
   noStroke();
 
