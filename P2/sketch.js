@@ -299,10 +299,10 @@ function drawLabels() {
   for (let j = startRow; j < endRow; j++) {
     let y = offsetY + j * spacing;
     // 왼쪽 (흰색)
-    fill(255);
+    fill(125);
     text(j + "", offsetX - 30, y);
     // 오른쪽 (회색)
-    fill(125);
+    fill(255);
     text(j + "", offsetX + gridWidth + 30, y);
   }
 
