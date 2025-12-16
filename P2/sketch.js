@@ -374,7 +374,7 @@ function drawUserTabs() {
   // 오른쪽 그리드 끝 기준으로 위치 계산
   let visibleCols = (viewMode === "weeklyGroup") ? 7 : cols;
   let gridWidth = (visibleCols - 1) * spacing;
-  let ux = offsetX + gridWidth + 80; // 그리드 오른쪽에서 약간 띄워서
+  let ux = offsetX + gridWidth + 100; // 그리드 오른쪽에서 약간 띄워서
   let uy = offsetY;                  // 상단 정렬
 
   let bw = 50; // 탭 폭
