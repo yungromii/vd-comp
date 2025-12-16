@@ -258,48 +258,64 @@ function drawLabels() {
   textAlign(CENTER, CENTER);
   textSize(10);           // 글자 크기
   textFont('Helvetica');  // 폰트
-  fill(255);              // 위쪽 날짜 텍스트는 흰색
   noStroke();
 
-  // ===== 위쪽 날짜 라벨 =====
+  // ===== 공통 그리드 크기 계산 =====
+  let visibleCols = (viewMode === "weeklyGroup") ? 7 : cols;
+  let gridWidth   = (visibleCols - 1) * spacing;
+  let gridHeight  = (rows - 1) * spacing;
+
+  // --------------------
+  // 1) 날짜 숫자 (위/아래)
+  // --------------------
+  fill(125); // 숫자는 모두 회색
+
   if (viewMode === "full") {
     for (let i = 0; i < cols; i++) {
       let x = offsetX + i * spacing;
-      text(str(i + 1), x, offsetY - 35);
+      // 위쪽
+      text(str(i + 1), x, offsetY - 25);
+      // 아래쪽
+      text(str(i + 1), x, offsetY + gridHeight + 25);
     }
   } else if (viewMode === "weeklyGroup") {
     for (let i = 0; i < 7; i++) {
       let x = offsetX + i * spacing;
-      text("D" + (i + 1), x, offsetY - 35);
+      // 위쪽
+      text("D" + (i + 1), x, offsetY - 25);
+      // 아래쪽
+      text("D" + (i + 1), x, offsetY + gridHeight + 25);
     }
   }
 
-  // ===== 왼쪽 시간 숫자 =====
-  fill(125); // 시간 텍스트는 회색
+  // --------------------
+  // 2) 시간 숫자 (좌/우)
+  // --------------------
   let startRow = (viewMode === "timeRange") ? timeStart : 0;
   let endRow   = (viewMode === "timeRange") ? timeEnd + 1 : rows;
 
   for (let j = startRow; j < endRow; j++) {
     let y = offsetY + j * spacing;
-    text(j + "", offsetX - 40, y);
+    // 왼쪽
+    text(j + "", offsetX - 30, y);
+    // 오른쪽
+    text(j + "", offsetX + gridWidth + 30, y);
   }
 
-  // ===== 축 제목용 공통 값 =====
-  let visibleCols = (viewMode === "weeklyGroup") ? 7 : cols;
-  let gridWidth   = (visibleCols - 1) * spacing;
-  let gridHeight  = (rows - 1) * spacing;
+  // --------------------
+  // 3) 축 제목 (알파벳) — 숫자보다 한 칸 더 떨어뜨리기
+  // --------------------
+  fill(255); // 알파벳은 흰색으로
 
-  // ===== 아래쪽: "dates <-" =====
-  fill(255); // 다시 흰색
-  textAlign(CENTER, CENTER);
+  // 아래쪽: "dates ←" (숫자보다 더 아래)
   let bottomX = offsetX + gridWidth / 2;
-  let bottomY = offsetY + gridHeight + 35; // 그리드보다 살짝 아래
+  let bottomY = offsetY + gridHeight + 45; // 숫자(25)보다 더 멀리 45로
   text("dates ←", bottomX, bottomY);
 
-  // ===== 오른쪽: 세로로 "hours ↑" =====
+  // 오른쪽: 세로로 "hours ↑" (숫자보다 더 바깥)
   push();
-  translate(offsetX + gridWidth + 40, offsetY + gridHeight / 2);
-  rotate(-HALF_PI); // 세로로 돌리기 (위쪽이 화살표 방향)
+  translate(offsetX + gridWidth + 50, offsetY + gridHeight / 2); // 숫자(30)보다 더 멀리 50으로
+  rotate(-HALF_PI); // 세로로 돌리기
   text("hours ↑", 0, 0);
   pop();
 
