@@ -313,12 +313,12 @@ function drawLabels() {
 
   // 아래쪽: "dates ←" (숫자보다 더 아래)
   let bottomX = offsetX + gridWidth / 2;
-  let bottomY = offsetY + gridHeight + 45; // 숫자(25)보다 더 멀리 45로
+  let bottomY = offsetY + gridHeight + 60; // 숫자(25)보다 더 멀리 45로
   text("dates ←", bottomX, bottomY);
 
   // 오른쪽: 세로로 "hours ↑" (숫자보다 더 바깥)
   push();
-  translate(offsetX + gridWidth + 50, offsetY + gridHeight / 2); // 숫자(30)보다 더 멀리 50으로
+  translate(offsetX + gridWidth + 65, offsetY + gridHeight / 2); // 숫자(30)보다 더 멀리 50으로
   rotate(-HALF_PI); // 세로로 돌리기
   text("hours ↑", 0, 0);
   pop();
