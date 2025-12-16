@@ -257,11 +257,11 @@ function drawLabels() {
   push();
   textAlign(CENTER, CENTER);
   textSize(10);           // 글자 크기
-  textFont('Helvetica');  // 폰트 이름 (시스템 폰트 사용)
-  fill(255);              // 흰색 텍스트
+  textFont('Helvetica');  // 폰트
+  fill(255);              // 위쪽 날짜 텍스트는 흰색
   noStroke();
 
-  // 위쪽 날짜 라벨
+  // ===== 위쪽 날짜 라벨 =====
   if (viewMode === "full") {
     for (let i = 0; i < cols; i++) {
       let x = offsetX + i * spacing;
@@ -274,15 +274,34 @@ function drawLabels() {
     }
   }
 
-  // 왼쪽 시간 라벨
-  fill (125);
+  // ===== 왼쪽 시간 숫자 =====
+  fill(125); // 시간 텍스트는 회색
   let startRow = (viewMode === "timeRange") ? timeStart : 0;
-  let endRow = (viewMode === "timeRange") ? timeEnd + 1 : rows;
+  let endRow   = (viewMode === "timeRange") ? timeEnd + 1 : rows;
 
   for (let j = startRow; j < endRow; j++) {
     let y = offsetY + j * spacing;
     text(j + "", offsetX - 40, y);
   }
+
+  // ===== 축 제목용 공통 값 =====
+  let visibleCols = (viewMode === "weeklyGroup") ? 7 : cols;
+  let gridWidth   = (visibleCols - 1) * spacing;
+  let gridHeight  = (rows - 1) * spacing;
+
+  // ===== 아래쪽: "dates <-" =====
+  fill(255); // 다시 흰색
+  textAlign(CENTER, CENTER);
+  let bottomX = offsetX + gridWidth / 2;
+  let bottomY = offsetY + gridHeight + 35; // 그리드보다 살짝 아래
+  text("dates ←", bottomX, bottomY);
+
+  // ===== 오른쪽: 세로로 "hours ↑" =====
+  push();
+  translate(offsetX + gridWidth + 40, offsetY + gridHeight / 2);
+  rotate(-HALF_PI); // 세로로 돌리기 (위쪽이 화살표 방향)
+  text("hours ↑", 0, 0);
+  pop();
 
   pop();
 }
