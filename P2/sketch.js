@@ -506,9 +506,9 @@ function mousePressed() {
   let categories = Object.keys(categoryStyles);
 
   // 버튼 크기와 간격 (drawCategoryButtons와 동일)
-  let bw = 40;
-  let bh = 22;
-  let gap = 8;
+  let bw = 50;
+  let bh = 26;
+  let gap = 10;
 
   // 시간 축 왼쪽에 세로 배열 (drawCategoryButtons와 동일)
   let bx = offsetX - 160;
