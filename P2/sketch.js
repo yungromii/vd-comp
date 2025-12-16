@@ -10,24 +10,36 @@ let viewMode = "full"; // "full", "timeRange", "weeklyGroup"
 let timeStart = 9;
 let timeEnd = 18;
 let weekGroup = 0;
-let pendingStart = null; // 시작점 임시 저장용
-let selectedCategory = null; // 고정 버튼으로 선택된 카테고리
-let currentDataset = "custom"; // 현재 선택된 데이터셋 ("custom" or "october")
 
-let animationSpeed = 545; // 한 프레임당 선 그려질 길이 (픽셀)
-let drawingProgress = 0; // 현재 그려지는 선의 진행 정도
+let pendingStart = null;      // 시작점 임시 저장
+let selectedCategory = null;  // 선택된 카테고리 버튼
+let currentDataset = "custom"; // 현재 데이터셋 ("custom", "october", 새로 추가한 id 등)
 
+// 버튼 / 탭 레이아웃 공통 상수
+const CAT_BTN_W   = 50;
+const CAT_BTN_H   = 26;
+const CAT_BTN_GAP = 10;
+const CAT_BTN_X_OFFSET = 160;  // 시간축 왼쪽으로부터 떨어진 정도
+
+const TAB_W       = 70;
+const TAB_H       = 26;
+const TAB_GAP     = 10;
+const TAB_X_MARGIN = 100;      // 그리드 오른쪽으로부터 떨어진 정도
+
+// 카테고리 스타일
 let categoryStyles = {
-  "home":        { color: [255, 255, 224, 127], weight: 20 },
+  "home":   { color: [255, 255, 224, 127], weight: 20 },
   "d.home": { color: [255, 255, 204, 180], weight: 22 },
-  "school":      { color: [255, 255, 0, 180],   weight: 22 },
-  "club":        { color: [255, 255, 0, 180],   weight: 22 },
-  "f.d":  { color: [0, 255, 0, 180],     weight: 22 },
-  "other":       { color: [255, 204, 255, 180], weight: 22 },
-  "work":    { color: [0, 255, 255, 180],   weight: 22 }
+  "school": { color: [255, 255, 0,   180], weight: 22 },
+  "club":   { color: [255, 255, 0,   180], weight: 22 },
+  "f.d":    { color: [0,   255, 0,   180], weight: 22 },
+  "other":  { color: [255, 204, 255, 180], weight: 22 },
+  "work":   { color: [0,   255, 255, 180], weight: 22 }
 };
 
-let originalPoints = [{date: "01", y: 0, category: "home"},
+// 원래 october 데이터
+let originalPoints = [
+  {date: "01", y: 0, category: "home"},
   {date: "01", y: 20, category: "f.d"},
   {date: "01", y: 21, category: "other"},
   {date: "02", y: 0, category: "other"},
@@ -165,8 +177,10 @@ let originalPoints = [{date: "01", y: 0, category: "home"},
   {date: "31", y: 11, category: "school"},
   {date: "31", y: 14, category: "school"},
   {date: "31", y: 17, category: "club"},
-  {date: "31", y: 23, category: "home"}];
+  {date: "31", y: 23, category: "home"}
+];
 
+// 데이터셋 저장소
 let datasetStore = {
   custom: [],
   october: originalPoints.map(p => ({ date: p.date, y: p.y, category: p.category }))
@@ -180,56 +194,22 @@ function setup() {
   textFont('Helvetica');
   strokeCap(ROUND);
   spacing = min((width - 200) / (cols - 1), (height - 200) / (rows - 1));
-  offsetX = (width - spacing * (cols - 1)) / 2;
-  offsetY = (height - spacing * (rows - 1)) / 2;
-  frameRate(60);
-  noLoop(); // Stop automatic drawing until mouse click
+  offsetX = (width - (cols - 1) * spacing) / 2;
+  offsetY = (height - (rows - 1) * spacing) / 2;
+  noLoop(); // 필요할 때만 redraw()로 다시 그림
 }
 
 function draw() {
   background(0);
   drawGrid();
-  drawLabels();        // 날짜/시간 텍스트 다시 표시
-  drawCategoryButtons(); // 고정된 카테고리 버튼 UI
+  drawLabels();
+  drawCategoryButtons();
   drawUserTabs();
   drawAllPoints();
-  let totalLength = getTotalLineLength();
-  drawLinesAnimated();
-  drawingProgress += animationSpeed;
-  // Stop animation after all lines are drawn
-  if (drawingProgress > totalLength) {
-    noLoop();
-  }
-}
-// Calculate the total length of all lines to control animation
-function getTotalLineLength() {
-  let grouped = {};
-  for (let p of points) {
-    if (!grouped[p.date]) grouped[p.date] = [];
-    grouped[p.date].push(p);
-  }
-  let sortedDates = Object.keys(grouped).sort((a, b) => int(a) - int(b));
-  let total = 0;
-  for (let date of sortedDates) {
-    let dateIndex = int(date) - 1;
-    if (viewMode === "weeklyGroup") {
-      let groupStart = weekGroup * 7;
-      if (dateIndex < groupStart || dateIndex >= groupStart + 7) continue;
-    }
-    let dayPoints = grouped[date].sort((a, b) => a.y - b.y);
-    for (let i = 0; i < dayPoints.length; i++) {
-      let p1 = dayPoints[i];
-      let p2 = dayPoints[i + 1];
-      // 마지막 점에는 더 이상 선을 그리지 않음 (끝점까지만)
-      if (!p2) continue;
-      let y1 = offsetY + p1.y * spacing;
-      let y2 = offsetY + p2.y * spacing;
-      total += abs(y2 - y1);
-    }
-  }
-  return total;
+  drawLines(); // 애니메이션 없이 한 번에 선 그리기
 }
 
+// 그리드 점들
 function drawGrid() {
   push();
   stroke(220, 127);
@@ -242,102 +222,88 @@ function drawGrid() {
     for (let j = rowStart; j < rowEnd; j++) {
       let x = offsetX + i * spacing;
       let y = offsetY + j * spacing;
-      // draw grid point with isolated style
       push();
       stroke(255);
       strokeWeight(0.5);
-      fill(255,1);
+      fill(255, 1);
       ellipse(x, y, 3, 3);
       pop();
     }
   }
   pop();
 }
+
+// 날짜/시간 라벨 + 축 이름
 function drawLabels() {
   push();
   textAlign(CENTER, CENTER);
-  textSize(10);           // 글자 크기
-  textFont('Helvetica');  // 폰트
+  textSize(10);
+  textFont('Helvetica');
   noStroke();
 
-  // ===== 공통 그리드 크기 계산 =====
   let visibleCols = (viewMode === "weeklyGroup") ? 7 : cols;
   let gridWidth   = (visibleCols - 1) * spacing;
   let gridHeight  = (rows - 1) * spacing;
 
-  // --------------------
-  // 1) 날짜 숫자 (위/아래)
-  // --------------------
+  // 날짜 (위/아래)
   if (viewMode === "full") {
     for (let i = 0; i < cols; i++) {
       let x = offsetX + i * spacing;
-      // 위쪽 (흰색)
-      fill(125);
-      text(str(i + 1), x, offsetY - 35);
-      // 아래쪽 (회색)
+      // 위: 흰색
       fill(255);
+      text(str(i + 1), x, offsetY - 35);
+      // 아래: 회색
+      fill(125);
       text(str(i + 1), x, offsetY + gridHeight + 35);
     }
   } else if (viewMode === "weeklyGroup") {
     for (let i = 0; i < 7; i++) {
       let x = offsetX + i * spacing;
-      // 위쪽 (흰색)
+      // 위: 흰색
       fill(255);
       text("D" + (i + 1), x, offsetY - 35);
-      // 아래쪽 (회색)
+      // 아래: 회색
       fill(125);
       text("D" + (i + 1), x, offsetY + gridHeight + 35);
     }
   }
 
-  // --------------------
-  // 2) 시간 숫자 (좌/우)
-  // --------------------
+  // 시간 (좌/우)
   let startRow = (viewMode === "timeRange") ? timeStart : 0;
   let endRow   = (viewMode === "timeRange") ? timeEnd + 1 : rows;
 
   for (let j = startRow; j < endRow; j++) {
     let y = offsetY + j * spacing;
-    // 왼쪽 (흰색)
-    fill(125);
-    text(j + "", offsetX - 35, y);
-    // 오른쪽 (회색)
+    // 왼쪽: 흰색
     fill(255);
+    text(j + "", offsetX - 35, y);
+    // 오른쪽: 회색
+    fill(125);
     text(j + "", offsetX + gridWidth + 35, y);
   }
 
-  // --------------------
-  // 3) 축 제목 (알파벳) — 숫자보다 한 칸 더 떨어뜨리기
-  // --------------------
-  fill(255); // 알파벳은 흰색으로
-
-  // 아래쪽: "dates ←" (숫자보다 더 아래)
+  // 축 제목
+  fill(255);
   let bottomX = offsetX + gridWidth / 2;
-  let bottomY = offsetY + gridHeight + 70; // 숫자(25)보다 더 멀리 45로
+  let bottomY = offsetY + gridHeight + 70;
   text("dates ←", bottomX, bottomY);
 
-  // 오른쪽: 세로로 "hours ↑" (숫자보다 더 바깥)
   push();
-  translate(offsetX + gridWidth + 70, offsetY + gridHeight / 2); // 숫자(30)보다 더 멀리 50으로
-  rotate(-HALF_PI); // 세로로 돌리기
+  translate(offsetX + gridWidth + 70, offsetY + gridHeight / 2);
+  rotate(-HALF_PI);
   text("hours ↑", 0, 0);
   pop();
 
   pop();
 }
+
+// 왼쪽 카테고리 버튼 UI
 function drawCategoryButtons() {
   push();
   let categories = Object.keys(categoryStyles);
 
-  // 버튼 크기와 간격
-  let bw = 50;  // 버튼 폭
-  let bh = 26;  // 버튼 높이
-  let gap = 10;  // 버튼 사이 간격
-
-  // 왼쪽 시간 축 근처에 세로 배열로 배치
-  // 시간 라벨(offsetX - 40)보다 충분히 왼쪽으로 떨어뜨려 오른쪽 탭과 레이아웃 균형
-  let bx = offsetX - 160; // 카테고리 버튼 X 위치
-  let by = offsetY;       // 첫 번째 버튼의 시작 Y
+  let bx = offsetX - CAT_BTN_X_OFFSET;
+  let by = offsetY;
 
   textAlign(CENTER, CENTER);
   textFont('Helvetica');
@@ -347,297 +313,73 @@ function drawCategoryButtons() {
   for (let i = 0; i < categories.length; i++) {
     let cat = categories[i];
     let x = bx;
-    let y = by + i * (bh + gap);
+    let y = by + i * (CAT_BTN_H + CAT_BTN_GAP);
 
-    // 선택된 카테고리는 categoryStyles에 정의된 색을 배경으로 사용
+    let style = categoryStyles[cat];
     if (selectedCategory === cat) {
-      let style = categoryStyles[cat];
-      if (style && style.color) {
-        let c = style.color;
-        fill(c[0], c[1], c[2], c[3]);
-      } else {
-        // 혹시 스타일이 없으면 흰색으로 fallback
-        fill(255, 255, 255, 220);
-      }
+      // 선택된 버튼: 해당 카테고리 색으로 배경
+      fill(style.color[0], style.color[1], style.color[2], 220);
     } else {
-      // 선택되지 않은 버튼은 어두운 회색
       fill(40, 40, 40, 200);
     }
-    rect(x, y, bw, bh, 4);
+    rect(x, y, CAT_BTN_W, CAT_BTN_H, 4);
 
-    // 텍스트
+    // 텍스트는 선택되면 검정, 아니면 흰색
     if (selectedCategory === cat) {
-      fill(0);     // 선택된 버튼에서는 글자를 검정으로
+      fill(0);
     } else {
-      fill(255);   // 나머지는 흰색 글자
+      fill(255);
     }
-    text(cat, x + bw / 2, y + bh / 2);
+    text(cat, x + CAT_BTN_W / 2, y + CAT_BTN_H / 2);
   }
   pop();
 }
 
+// 오른쪽 데이터셋 탭 (custom / october / +id)
 function drawUserTabs() {
   push();
 
-  // 오른쪽 그리드 끝 기준으로 위치 계산
   let visibleCols = (viewMode === "weeklyGroup") ? 7 : cols;
-  let gridWidth = (visibleCols - 1) * spacing;
-  let ux = offsetX + gridWidth + 100; // 그리드 오른쪽에서 약간 띄워서
-  let uy = offsetY;                  // 상단 정렬
-
-  let bw = 50; // 탭 폭
-  let bh = 26; // 탭 높이
-  let gap = 10; // 탭 사이 간격
+  let gridWidth   = (visibleCols - 1) * spacing;
+  let ux = offsetX + gridWidth + TAB_X_MARGIN;
+  let uy = offsetY;
 
   textAlign(CENTER, CENTER);
   textFont('Helvetica');
   textSize(10);
   noStroke();
 
-  // 데이터셋 탭들 (custom, october, 그리고 이후 추가되는 id들)
   for (let i = 0; i < datasetOrder.length; i++) {
     let id = datasetOrder[i];
     let x = ux;
-    let y = uy + i * (bh + gap);
+    let y = uy + i * (TAB_H + TAB_GAP);
 
     if (currentDataset === id) {
-      fill(255, 255, 255, 230); // 선택된 상태 강조
+      fill(255, 255, 255, 230);
     } else {
       fill(40, 40, 40, 200);
     }
-    rect(x, y, bw, bh, 4);
+    rect(x, y, TAB_W, TAB_H, 4);
 
     if (currentDataset === id) {
       fill(0);
     } else {
       fill(255);
     }
-    text(id, x + bw / 2, y + bh / 2);
+    text(id, x + TAB_W / 2, y + TAB_H / 2);
   }
 
-  // ID 추가 버튼
-  let addY = uy + datasetOrder.length * (bh + gap) + 10;
+  // "+ id" 버튼
+  let addY = uy + datasetOrder.length * (TAB_H + TAB_GAP) + 10;
   fill(40, 40, 40, 200);
-  rect(ux, addY, bw, bh, 4);
+  rect(ux, addY, TAB_W, TAB_H, 4);
   fill(255);
-  text("+ id", ux + bw / 2, addY + bh / 2);
+  text("+ id", ux + TAB_W / 2, addY + TAB_H / 2);
 
   pop();
 }
 
-function drawLinesAnimated() {
-  let grouped = {};
-  for (let p of points) {
-    if (!grouped[p.date]) grouped[p.date] = [];
-    grouped[p.date].push(p);
-  }
-
-  let sortedDates = Object.keys(grouped).sort((a, b) => int(a) - int(b));
-  let totalDrawn = 0;
-
-  for (let date of sortedDates) {
-    let dateIndex = int(date) - 1;
-    if (viewMode === "weeklyGroup") {
-      let groupStart = weekGroup * 7;
-      if (dateIndex < groupStart || dateIndex >= groupStart + 7) continue;
-    }
-
-    let x = (viewMode === "weeklyGroup")
-      ? offsetX + (dateIndex - weekGroup * 7) * spacing
-      : offsetX + dateIndex * spacing;
-
-    let dayPoints = grouped[date].sort((a, b) => a.y - b.y);
-    for (let i = 0; i < dayPoints.length; i++) {
-      let p1 = dayPoints[i];
-      let p2 = dayPoints[i + 1];
-      // 마지막 점이면 더 이상 선을 그리지 않음 (끝점까지만)
-      if (!p2) continue;
-      let y1 = offsetY + p1.y * spacing;
-      let y2 = offsetY + p2.y * spacing;
-
-      let style = categoryStyles[p1.category] || { color: [150, 150, 150, 127], weight: 6 };
-      // isolate stroke state
-      push();
-      if(p1.category === "home"){
-        noFill();
-        stroke(...style.color);
-        strokeWeight(style.weight);
-      } else {
-        stroke(...style.color);
-        strokeWeight(style.weight);
-      }
-
-      let lineLength = abs(y2 - y1);
-      if (drawingProgress > totalDrawn) {
-        let visibleLength = min(drawingProgress - totalDrawn, lineLength);
-        let yEnd = y1 + visibleLength * (y2 > y1 ? 1 : -1);
-        line(x, y1, x, yEnd);
-      }
-      pop();
-      totalDrawn += lineLength;
-    }
-  }
-
-  
-}
-
-function keyPressed() {
-  if (key === '1') {
-    viewMode = "full";
-  } else if (key === '2') {
-    viewMode = "timeRange";
-    timeStart = 9;
-    timeEnd = 18;
-  } else if (key === '3') {
-    viewMode = "weeklyGroup"; weekGroup = 0;
-  } else if (key === '4') {
-    viewMode = "weeklyGroup"; weekGroup = 1;
-  } else if (key === '5') {
-    viewMode = "weeklyGroup"; weekGroup = 2;
-  } else if (key === '6') {
-    viewMode = "weeklyGroup"; weekGroup = 3;
-  }
-
-  drawingProgress = 0;
-  loop(); // 다시 애니메이션 시작
-}
-function mousePressed() {
-  // 1) 먼저 왼쪽 카테고리 버튼을 눌렀는지 확인
-  let categories = Object.keys(categoryStyles);
-
-  // 버튼 크기와 간격 (drawCategoryButtons와 동일)
-  let bw = 50;
-  let bh = 26;
-  let gap = 10;
-
-  // 시간 축 왼쪽에 세로 배열 (drawCategoryButtons와 동일)
-  let bx = offsetX - 160;
-  let by = offsetY;
-
-  for (let i = 0; i < categories.length; i++) {
-    // drawCategoryButtons와 동일한 좌표 계산: 세로 배열
-    let x = bx;
-    let y = by + i * (bh + gap);
-    if (mouseX >= x && mouseX <= x + bw && mouseY >= y && mouseY <= y + bh) {
-      // 이 버튼 영역 클릭 → 선택 카테고리 설정
-      selectedCategory = categories[i];
-      pendingStart = null;      // 진행 중이던 선 선택 초기화
-      drawingProgress = 0;
-      loop();                   // 하이라이트 업데이트
-      return;
-    }
-  }
-
-  // 1.5) 오른쪽 데이터셋 탭을 눌렀는지 확인 (custom / october / 추가된 id들)
-  let visibleCols = (viewMode === "weeklyGroup") ? 7 : cols;
-  let gridWidth = (visibleCols - 1) * spacing;
-  let ux = offsetX + gridWidth + 80; // drawUserTabs와 동일한 위치
-  let uy = offsetY;
-  let tabW = 90;
-  let tabH = 26;
-  let tabGap = 6;
-
-  // 기존 데이터셋 탭 클릭 처리
-  for (let i = 0; i < datasetOrder.length; i++) {
-    let id = datasetOrder[i];
-    let tx = ux;
-    let ty = uy + i * (tabH + tabGap);
-    if (mouseX >= tx && mouseX <= tx + tabW && mouseY >= ty && mouseY <= ty + tabH) {
-      currentDataset = id;
-      points = datasetStore[id];
-      pendingStart = null;
-      drawingProgress = 0;
-      loop();
-      return;
-    }
-  }
-
-  // "+ id" 버튼 클릭 처리
-  let addY = uy + datasetOrder.length * (tabH + tabGap) + 10;
-  if (mouseX >= ux && mouseX <= ux + tabW && mouseY >= addY && mouseY <= addY + tabH) {
-    let newId = prompt("Enter a new ID name:");
-    if (newId) {
-      newId = newId.trim();
-      if (newId.length > 0) {
-        if (datasetStore[newId]) {
-          alert("That ID already exists.");
-        } else {
-          datasetStore[newId] = [];
-          datasetOrder.push(newId);
-          currentDataset = newId;
-          points = datasetStore[newId];
-          pendingStart = null;
-          drawingProgress = 0;
-          loop();
-        }
-      }
-    }
-    return;
-  }
-
-  // 2) 버튼이 아닌 영역 → 그리드에서 점 선택 로직
-  let threshold = 10;
-  let clicked = null;
-
-  // 클릭한 위치에 가장 가까운 그리드 좌표 찾기
-  for (let i = 0; i < cols; i++) {
-    for (let j = 0; j < rows; j++) {
-      let x = offsetX + i * spacing;
-      let y = offsetY + j * spacing;
-      let d = dist(mouseX, mouseY, x, y);
-      if (d < threshold) {
-        clicked = { dateIndex: i, row: j };
-        break;
-      }
-    }
-    if (clicked) break;
-  }
-
-  if (!clicked) return; // 아무 점도 안 눌렀으면 종료
-
-  // 아직 카테고리 버튼이 선택되지 않았다면
-  if (!selectedCategory) {
-    alert("Please select one of the category buttons on the left first.");
-    return;
-  }
-
-  // 아직 시작점이 선택되지 않은 상태 → 시작점만 저장
-  if (pendingStart === null) {
-    pendingStart = {
-      dateIndex: clicked.dateIndex,
-      row: clicked.row,
-      category: selectedCategory
-    };
-    return;
-  }
-
-  // 여기까지 왔으면 pendingStart가 이미 있음 → 끝점 선택 단계
-  // 같은 날짜(같은 x축) 안에서만 허용
-  if (clicked.dateIndex !== pendingStart.dateIndex) {
-    alert("You can only choose the start and end on the same day’s grid.");
-    return;
-  }
-
-  let dateIndex = clicked.dateIndex;
-  let startRow = pendingStart.row;
-  let endRow = clicked.row;
-  let cat = pendingStart.category;
-  let dateStr = nf(dateIndex + 1, 2);
-
-  // 시작/끝 y 순서 정리
-  let yMin = Math.min(startRow, endRow);
-  let yMax = Math.max(startRow, endRow);
-
-  // 동일한 날짜/카테고리/좌표의 기존 포인트가 있어도 그냥 추가 (중복 허용)
-  points.push({ date: dateStr, y: yMin, category: cat });
-  points.push({ date: dateStr, y: yMax, category: cat });
-
-  // 상태 초기화 후 애니메이션 다시 시작
-  pendingStart = null;
-  drawingProgress = 0;
-  loop();
-}
-
+// 모든 포인트 점 찍기
 function drawAllPoints() {
   let grouped = {};
   for (let p of points) {
@@ -671,24 +413,193 @@ function drawAllPoints() {
   }
 }
 
+// 선을 한 번에 그리는 버전 (애니메이션 X)
 function drawLines() {
-  stroke(0); // black stroke
-  strokeWeight(1);
-  noFill();
-
-  // Filter and sort "home" category points by x (date), then y (time)
-  let housePoints = points
-    .filter(p => p.category === "home")
-    .sort((a, b) => int(a.date) - int(b.date) || a.y - b.y);
-
-  if (housePoints.length > 1) {
-    beginShape();
-    for (let i = 0; i < housePoints.length; i++) {
-      let pt = housePoints[i];
-      let x = offsetX + (int(pt.date) - 1) * spacing;
-      let y = offsetY + pt.y * spacing;
-      vertex(x, y);
-    }
-    endShape();
+  let grouped = {};
+  for (let p of points) {
+    if (!grouped[p.date]) grouped[p.date] = [];
+    grouped[p.date].push(p);
   }
+
+  let sortedDates = Object.keys(grouped).sort((a, b) => int(a) - int(b));
+
+  for (let date of sortedDates) {
+    let dateIndex = int(date) - 1;
+    if (viewMode === "weeklyGroup") {
+      let groupStart = weekGroup * 7;
+      if (dateIndex < groupStart || dateIndex >= groupStart + 7) continue;
+    }
+
+    let x = (viewMode === "weeklyGroup")
+      ? offsetX + (dateIndex - weekGroup * 7) * spacing
+      : offsetX + dateIndex * spacing;
+
+    let dayPoints = grouped[date].sort((a, b) => a.y - b.y);
+
+    for (let i = 0; i < dayPoints.length - 1; i++) {
+      let p1 = dayPoints[i];
+      let p2 = dayPoints[i + 1];
+
+      let y1 = offsetY + p1.y * spacing;
+      let y2 = offsetY + p2.y * spacing;
+
+      let style = categoryStyles[p1.category] || { color: [150, 150, 150, 127], weight: 6 };
+      push();
+      if (p1.category === "home") {
+        noFill();
+        stroke(...style.color);
+        strokeWeight(style.weight);
+      } else {
+        stroke(...style.color);
+        strokeWeight(style.weight);
+      }
+      line(x, y1, x, y2);
+      pop();
+    }
+  }
+}
+
+// 키로 viewMode 변경
+function keyPressed() {
+  if (key === '1') {
+    viewMode = "full";
+  } else if (key === '2') {
+    viewMode = "timeRange";
+    timeStart = 9;
+    timeEnd = 18;
+  } else if (key === '3') {
+    viewMode = "weeklyGroup"; weekGroup = 0;
+  } else if (key === '4') {
+    viewMode = "weeklyGroup"; weekGroup = 1;
+  } else if (key === '5') {
+    viewMode = "weeklyGroup"; weekGroup = 2;
+  } else if (key === '6') {
+    viewMode = "weeklyGroup"; weekGroup = 3;
+  }
+  redraw();
+}
+
+// 마우스 클릭: 카테고리 선택 / 데이터셋 탭 / 그리드에서 시작점-끝점 찍기
+function mousePressed() {
+  let categories = Object.keys(categoryStyles);
+
+  // 1) 카테고리 버튼 클릭 체크
+  let bx = offsetX - CAT_BTN_X_OFFSET;
+  let by = offsetY;
+
+  for (let i = 0; i < categories.length; i++) {
+    let x = bx;
+    let y = by + i * (CAT_BTN_H + CAT_BTN_GAP);
+    if (
+      mouseX >= x && mouseX <= x + CAT_BTN_W &&
+      mouseY >= y && mouseY <= y + CAT_BTN_H
+    ) {
+      selectedCategory = categories[i];
+      pendingStart = null;
+      redraw();
+      return;
+    }
+  }
+
+  // 2) 오른쪽 데이터셋 탭 클릭 체크
+  let visibleCols = (viewMode === "weeklyGroup") ? 7 : cols;
+  let gridWidth   = (visibleCols - 1) * spacing;
+  let ux = offsetX + gridWidth + TAB_X_MARGIN;
+  let uy = offsetY;
+
+  for (let i = 0; i < datasetOrder.length; i++) {
+    let id = datasetOrder[i];
+    let tx = ux;
+    let ty = uy + i * (TAB_H + TAB_GAP);
+    if (
+      mouseX >= tx && mouseX <= tx + TAB_W &&
+      mouseY >= ty && mouseY <= ty + TAB_H
+    ) {
+      currentDataset = id;
+      points = datasetStore[id];
+      pendingStart = null;
+      redraw();
+      return;
+    }
+  }
+
+  // "+ id" 탭
+  let addY = uy + datasetOrder.length * (TAB_H + TAB_GAP) + 10;
+  if (
+    mouseX >= ux && mouseX <= ux + TAB_W &&
+    mouseY >= addY && mouseY <= addY + TAB_H
+  ) {
+    let newId = prompt("Enter a new ID name:");
+    if (newId) {
+      newId = newId.trim();
+      if (newId.length > 0) {
+        if (datasetStore[newId]) {
+          alert("That ID already exists.");
+        } else {
+          datasetStore[newId] = [];
+          datasetOrder.push(newId);
+          currentDataset = newId;
+          points = datasetStore[newId];
+          pendingStart = null;
+        }
+      }
+    }
+    redraw();
+    return;
+  }
+
+  // 3) 그리드 클릭 → 점 선택 / 선 추가
+  let threshold = 10;
+  let clicked = null;
+
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      let x = offsetX + i * spacing;
+      let y = offsetY + j * spacing;
+      if (dist(mouseX, mouseY, x, y) < threshold) {
+        clicked = { dateIndex: i, row: j };
+        break;
+      }
+    }
+    if (clicked) break;
+  }
+
+  if (!clicked) return;
+
+  if (!selectedCategory) {
+    alert("Please select one of the category buttons on the left first.");
+    return;
+  }
+
+  // 시작점이 아직 없는 경우 → 시작점 저장
+  if (pendingStart === null) {
+    pendingStart = {
+      dateIndex: clicked.dateIndex,
+      row: clicked.row,
+      category: selectedCategory
+    };
+    redraw();
+    return;
+  }
+
+  // 이미 시작점이 있는 경우 → 같은 날짜인지 확인 후 끝점으로 추가
+  if (clicked.dateIndex !== pendingStart.dateIndex) {
+    alert("You can only choose the start and end on the same day's grid.");
+    return;
+  }
+
+  let dateIndex = clicked.dateIndex;
+  let startRow = pendingStart.row;
+  let endRow = clicked.row;
+  let cat = pendingStart.category;
+  let dateStr = nf(dateIndex + 1, 2); // "01" 형식
+
+  let yMin = Math.min(startRow, endRow);
+  let yMax = Math.max(startRow, endRow);
+
+  points.push({ date: dateStr, y: yMin, category: cat });
+  points.push({ date: dateStr, y: yMax, category: cat });
+
+  pendingStart = null;
+  redraw();
 }
